@@ -33,7 +33,9 @@ public class WordleService {
         return gameRepository.save(game);
     }
 
-    // public GuessResponse guess(String id, GuessRequest guess);
+    // public GuessResponse guess(String id, GuessRequest guess){
+
+    // }
 
     private List<Boolean> isLettersInWord(String word){
         
