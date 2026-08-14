@@ -3,11 +3,11 @@ name: PR Validation
 on:
   pull_request:
     branches:
-      - main
+      - develop
 
 jobs:
   changes:
-    runs-on: ubuntu-latest
+      runs-on: ubuntu-latest
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
       frontend: ${{ steps.filter.outputs.frontend }}
@@ -19,8 +19,10 @@ jobs:
           filters: |
             backend:
               - 'backend/**'
+              - './github/workflows/**'
             frontend:
               - 'frontend/**'
+              - './github/workflows/**'
 
   backend:
     needs: changes
@@ -54,7 +56,7 @@ jobs:
 
   pr-status-check:
     name: PR Status Check
-    needs: [backend, frontend]
+    needs: [backend, frontend, changes]
     if: always() 
     runs-on: ubuntu-latest
     steps:
