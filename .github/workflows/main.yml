@@ -63,36 +63,36 @@ jobs:
     steps:
       - name: Verify job results
         env:
-          CHANGES_RESULT: ${{ needs.change.result }}
-          BACKEND_CHANGED: ${{ needs.changes.output.backend }}
-          BACKEND_RESULT: ${{ needs.change.backend.result }}
-          FRONTEND_CHANGED: ${{ needs.change.output.frontend }}
-          FRONTEND_RESULT: ${{ needs.change.frontend.result }}
+          CHANGES_RESULT: ${{ needs.changes.result }}
+          BACKEND_CHANGED: ${{ needs.changes.outputs.backend }}
+          BACKEND_RESULT: ${{ needs.backend.result }}
+          FRONTEND_CHANGED: ${{ needs.changes.outputs.frontend }}
+          FRONTEND_RESULT: ${{ needs.frontend.result }}
         shell: bash
         run: | 
           set -euo pipefail
 
-          if [[ "$CHANGES_RESULT" != "success"]]; then 
-              echo "::error::changes job finished with $"CHANGES_RESULT"
+          if [[ "$CHANGES_RESULT" != "success" ]]; then
+              echo "::error::changes job finished with $CHANGES_RESULT"
               exit 1
           fi
 
-        case "${BACKEND_CHANGED}:${BACKEND_RESULT}" in
-          true:success|false:skipped) ;;
-          *)
-            echo "::error: unexpected backend state: changed=$BACKEND_CHANGED result=$BACKEND_RESULT"
-            exit 1
-            ;;
-        esac
+          case "${BACKEND_CHANGED}:${BACKEND_RESULT}" in
+            true:success|false:skipped) ;;
+            *)
+             echo "::error:: unexpected backend state: changed=$BACKEND_CHANGED result=$BACKEND_RESULT"
+             exit 1
+             ;;
+          esac
         
-        case "${FRONTEND_CHANGED}:${FRONTEND_RESULT}" in
-          true:success|false:skipped) ;;
-          *)
-            echo "::error: unexpected backend state: changed=$FRONTEND_CHANGED result=$FRONTEND_RESULT"
-            exit 1
-            ;;
-        esac
+          case "${FRONTEND_CHANGED}:${FRONTEND_RESULT}" in
+            true:success|false:skipped) ;;
+            *)
+             echo "::error:: unexpected frontend state: changed=$FRONTEND_CHANGED result=$FRONTEND_RESULT"
+             exit 1
+             ;;
+          esac
 
-        echo "All jobs have passed."
+          echo "All jobs have passed."
 
 
