@@ -1,6 +1,6 @@
 package pedro.wordle.service.repository.entity;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -35,5 +35,5 @@ public class GuessEntity {
     private GameEntity game;
 
     @JsonFormat(pattern = "MM-dd-yyyy")
-    private LocalDateTime createdAt;
+    private LocalDate createdAt;
 }
