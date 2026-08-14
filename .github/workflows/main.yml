@@ -19,10 +19,10 @@ jobs:
           filters: |
             backend:
               - 'backend/**'
-              - './github/workflows/**'
+              - '.github/workflows/**'
             frontend:
               - 'frontend/**'
-              - './github/workflows/**'
+              - '.github/workflows/**'
 
   backend:
     needs: changes
