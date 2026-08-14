@@ -37,7 +37,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 25
-      - run: mvn test
+      - run: ./mvnw -B verify
 
   frontend:
     needs: changes
@@ -52,6 +52,7 @@ jobs:
         with:
           node-version: 24 
       - run: npm ci
+      - run: npm run typecheck
       - run: npm run build
 
   pr-status-check:
