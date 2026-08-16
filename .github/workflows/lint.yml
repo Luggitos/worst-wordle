@@ -8,12 +8,13 @@ on:
     branches:
       - develop
 
-permissions:
-  contents: read
+permissions: {}
 
 jobs:
   actionlint:
     name: Actionlint
+    permissions:
+      contents: read
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository

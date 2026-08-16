@@ -8,8 +8,13 @@ on:
     branches:
       - develop
 
+permissions: {}
+
 jobs:
   changes:
+    permissions:
+      contents: read
+      pull-requests: read
     runs-on: ubuntu-latest
     outputs:
       backend: ${{ steps.filter.outputs.backend }}
@@ -29,6 +34,8 @@ jobs:
 
   backend:
     needs: changes
+    permissions:
+      contents: read
     if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     defaults:
@@ -44,6 +51,8 @@ jobs:
 
   frontend:
     needs: changes
+    permissions:
+      contents: read
     if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     defaults:
@@ -53,7 +62,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: 24 
+          node-version: 24
       - run: npm ci
       - run: npm run typecheck
       - run: npm run build
@@ -61,7 +70,7 @@ jobs:
   pr-status-check:
     name: PR Status Check
     needs: [backend, frontend, changes]
-    if: always() 
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Verify job results
@@ -72,7 +81,7 @@ jobs:
           FRONTEND_CHANGED: ${{ needs.changes.outputs.frontend }}
           FRONTEND_RESULT: ${{ needs.frontend.result }}
         shell: bash
-        run: | 
+        run: |
           set -euo pipefail
 
           if [[ "$CHANGES_RESULT" != "success" ]]; then
@@ -87,7 +96,7 @@ jobs:
              exit 1
              ;;
           esac
-        
+
           case "${FRONTEND_CHANGED}:${FRONTEND_RESULT}" in
             true:success|false:skipped) ;;
             *)
@@ -97,5 +106,3 @@ jobs:
           esac
 
           echo "All jobs have passed."
-
-
