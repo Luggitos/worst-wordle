@@ -7,33 +7,44 @@ import pedro.wordle.service.WordleService;
 
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import pedro.wordle.service.repository.entity.GameEntity;
-import pedro.wordle.service.repository.jpa.GameRepository;
+import pedro.wordle.service.repository.dto.GameStatusResponse;
+import pedro.wordle.service.repository.dto.GameStartResponse;
+import pedro.wordle.service.repository.dto.GuessRequest;
+import pedro.wordle.service.repository.dto.GuessResponse;
 
 
 @RestController
 @RequestMapping("/wordle")
 public class WordleController {
     
-    private final GameRepository gameRepository;
-    private final WordleService wordleService;
+    @Autowired
+    private WordleService wordleService;
 
-    public WordleController(WordleService wordleService, GameRepository gameRepository) {
+    public WordleController(WordleService wordleService) {
         this.wordleService = wordleService;
-        this.gameRepository = gameRepository;
     }
 
     @PostMapping
-    public GameEntity dailyWorld(){
+    public GameStartResponse dailyWorld(){
+
         return wordleService.startGame();
     }
+    
+    @GetMapping("/{gameId}")
+    public GameStatusResponse gameStatus(@PathVariable String gameId){
 
-    @GetMapping("/{id}")
-    public Optional<GameEntity> gameStatus(@PathVariable String id){
-        return gameRepository.findById(id);
+        return wordleService.getGameInfo(gameId);
+    }
+
+    @PostMapping("/guess/{gameId}")
+    public GuessResponse makeGuess(@PathVariable String gameId, @RequestBody GuessRequest request){
+
+        return wordleService.makeAGuess(gameId, request.guess().toUpperCase());
     }
 }

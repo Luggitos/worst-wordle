@@ -1,8 +1,6 @@
 package pedro.wordle.service.repository.entity;
 
-import java.time.LocalDate;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,6 +32,5 @@ public class GuessEntity {
     @JoinColumn(name = "game_id")
     private GameEntity game;
 
-    @JsonFormat(pattern = "MM-dd-yyyy")
-    private LocalDate createdAt;
+    private LocalDateTime createdAt;
 }

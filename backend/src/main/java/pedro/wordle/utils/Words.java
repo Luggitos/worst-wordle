@@ -3,6 +3,8 @@ package pedro.wordle.utils;
 import java.util.List;
 
 public class Words {
+
+    public static final Integer MAX_ATTEMPTS = 6;
     
     public static final List<String> WORDS = List.of(
         "AMIGO", "BANCO", "CAMPO", "CARRO", "CAIXA",
