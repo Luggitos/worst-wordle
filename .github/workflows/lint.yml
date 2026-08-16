@@ -1,5 +1,3 @@
-# REMEMBER TO ADD IT TO GITHUBACTIONS (vou esquecer)
-
 name: Workflow Validation
 
 on:
