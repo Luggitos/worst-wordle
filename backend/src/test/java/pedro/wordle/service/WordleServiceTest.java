@@ -218,7 +218,7 @@ public class WordleServiceTest {
         when(gameRepository.findById(TEST_ID))
             .thenReturn(Optional.of(game));
 
-        wordleService.makeAGuess(TEST, LIMPO);
+        wordleService.makeAGuess(TEST_ID, LIMPO);
 
         assertTrue(game.getFinished());
         assertFalse(game.getWon());
