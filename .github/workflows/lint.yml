@@ -1,6 +1,9 @@
 name: Workflow Validation
 
 on:
+  push: #not allowed tho
+    branches:
+      - develop
   pull_request:
     branches:
       - develop
