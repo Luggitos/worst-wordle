@@ -42,7 +42,7 @@ public class WordleController {
         return wordleService.getGameInfo(gameId);
     }
 
-    @PostMapping("wordle/guess/{gameId}")
+    @PostMapping("/guess/{gameId}")
     public GuessResponse makeGuess(@PathVariable String gameId, @RequestBody GuessRequest request){
 
         return wordleService.makeAGuess(gameId, request.guess().toUpperCase());
