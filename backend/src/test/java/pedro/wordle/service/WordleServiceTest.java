@@ -1,8 +1,10 @@
 package pedro.wordle.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,6 +15,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -32,6 +35,8 @@ import pedro.wordle.service.repository.jpa.GuessRepository;
 @ExtendWith(MockitoExtension.class)
 public class WordleServiceTest {
     
+    private static final String LIMPO = "LIMPO";
+
     private static final String TEST = "TEST";
 
     private static final String TEST_ID = "testId";
@@ -118,7 +123,7 @@ public class WordleServiceTest {
         when(gameRepository.findById(TEST_ID))
             .thenReturn(Optional.of(game));
 
-        GuessResponse response = wordleService.makeAGuess(TEST_ID, "LIMPO");
+        GuessResponse response = wordleService.makeAGuess(TEST_ID, LIMPO);
 
         assertNotNull(response);
         assertEquals(3, response.attemptNumber());
@@ -155,5 +160,69 @@ public class WordleServiceTest {
             GameIsAlreadyFinishedException.class,
             () -> wordleService.makeAGuess(TEST_ID, "HOUSE")
         );
+    }
+
+    @Test
+    void shouldIncrementAttemptsWhenGuessIsProcessed(){
+        GameEntity game = new GameEntity();
+        game.setId(TEST_ID);
+        game.setAttempts(2);
+        game.setFinished(false);
+        game.setGameDate(LocalDate.now());
+
+        when(gameRepository.findById(TEST_ID))
+            .thenReturn(Optional.of(game));
+
+        wordleService.makeAGuess(TEST_ID, LIMPO);
+
+        assertEquals(3, game.getAttempts());
+
+        verify(guessRepository).save(any(GuessEntity.class));
+        verify(gameRepository).save(game);
+    }
+
+    @Test
+    void shouldSaveGuessEntityWithCorrectValue(){
+        GameEntity game = new GameEntity();
+        game.setId(TEST_ID);
+        game.setAttempts(1);
+        game.setFinished(false);
+        game.setGameDate(LocalDate.now());
+
+        when(gameRepository.findById(TEST_ID))
+            .thenReturn(Optional.of(game));
+
+        wordleService.makeAGuess(TEST_ID, LIMPO);
+
+        ArgumentCaptor<GuessEntity> captor = 
+            ArgumentCaptor.forClass(GuessEntity.class);
+    
+        verify(guessRepository).save(captor.capture());
+        
+        GuessEntity savedGuess = captor.getValue();
+
+        assertEquals(LIMPO, savedGuess.getGuess());
+        assertEquals(2, savedGuess.getAttemptNumber());
+        assertEquals(game, savedGuess.getGame());
+        assertNotNull(savedGuess.getCreatedAt());
+    }
+
+    @Test
+    void shouldEndGameWhenMaxAttemptsIsReached(){
+        GameEntity game = new GameEntity();
+        game.setId(TEST_ID);
+        game.setAttempts(5);
+        game.setFinished(false);
+        game.setGameDate(LocalDate.now());
+
+        when(gameRepository.findById(TEST_ID))
+            .thenReturn(Optional.of(game));
+
+        wordleService.makeAGuess(TEST_ID, LIMPO);
+
+        assertTrue(game.getFinished());
+        assertFalse(game.getWon());
+        
+        verify(gameRepository).save(game);
     }
 }
