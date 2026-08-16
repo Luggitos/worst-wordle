@@ -3,7 +3,6 @@ package pedro.wordle.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import pedro.wordle.exceptions.GameAlreadyExistsException;
 import pedro.wordle.exceptions.GameExpiredException;
 import pedro.wordle.exceptions.GameIsAlreadyFinishedException;
 import pedro.wordle.exceptions.InvalidWordTypedException;
@@ -50,10 +49,10 @@ public class WordleService {
         game.setGameDate(LocalDate.now());
         game.setDailyword(dailyWord);
 
-        gameRepository.save(game);
+        GameEntity savedGame = gameRepository.save(game);
         
         return new GameStartResponse(
-            game.getId()
+            savedGame.getId()
         );
     }
 

@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -16,7 +17,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cglib.core.Local;
 
 import pedro.wordle.exceptions.GameExpiredException;
 import pedro.wordle.exceptions.GameIsAlreadyFinishedException;
@@ -66,7 +66,7 @@ public class WordleServiceTest {
         game.setAttempts(0);
         game.setFinished(false);
         game.setWon(false);
-        game.setGuesses(null);
+        game.setGuesses(List.of());
         game.setGameDate(LocalDate.now());
 
         when(gameRepository.findById(TEST_ID))
@@ -118,10 +118,10 @@ public class WordleServiceTest {
         when(gameRepository.findById(TEST_ID))
             .thenReturn(Optional.of(game));
 
-        GuessResponse response = wordleService.makeAGuess(TEST_ID, TEST);
+        GuessResponse response = wordleService.makeAGuess(TEST_ID, "LIMPO");
 
         assertNotNull(response);
-        assertEquals(2, response.attemptNumber());
+        assertEquals(3, response.attemptNumber());
 
         verify(guessRepository).save(any(GuessEntity.class));
         verify(gameRepository).save(any(GameEntity.class));
