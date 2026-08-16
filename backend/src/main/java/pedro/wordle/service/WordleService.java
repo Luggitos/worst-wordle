@@ -1,88 +1,179 @@
 package pedro.wordle.service;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import pedro.wordle.exceptions.GameExpiredException;
+import pedro.wordle.exceptions.GameIsAlreadyFinishedException;
+import pedro.wordle.exceptions.InvalidWordTypedException;
+import pedro.wordle.service.repository.dto.GameStatusResponse;
+import pedro.wordle.service.repository.dto.GuessHistory;
+import pedro.wordle.service.repository.dto.GameStartResponse;
+import pedro.wordle.service.repository.dto.GuessResponse;
 import pedro.wordle.service.repository.entity.GameEntity;
+import pedro.wordle.service.repository.entity.GuessEntity;
 import pedro.wordle.service.repository.jpa.GameRepository;
 
+import pedro.wordle.service.repository.jpa.GuessRepository;
 import static pedro.wordle.utils.WordGenerator.getRandomWord;
+import static pedro.wordle.utils.Words.MAX_ATTEMPTS;
 import static pedro.wordle.utils.Words.WORDS;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
 
 @Service
 public class WordleService {
 
     private final String dailyWord = getRandomWord();
-    private final GameRepository gameRepository;
 
-    public WordleService(GameRepository gameRepository){
+    @Autowired
+    private GameRepository gameRepository;
+    
+    @Autowired
+    private GuessRepository guessRepository;
+
+    public WordleService(GameRepository gameRepository, GuessRepository guessRepository){
         this.gameRepository = gameRepository;
+        this.guessRepository = guessRepository;
     };
 
-    public GameEntity startGame(){
+    public GameStartResponse startGame(){
 
         GameEntity game = new GameEntity();
 
         game.setAttempts(0);
-        game.setDailyword(dailyWord);
         game.setFinished(false);
+        game.setGameDate(LocalDate.now());
+        game.setDailyword(dailyWord);
 
-        return gameRepository.save(game);
+        GameEntity savedGame = gameRepository.save(game);
+        
+        return new GameStartResponse(
+            savedGame.getId()
+        );
     }
 
-    //TODO implement this method
-    // public GuessResponse guess(String id, GuessRequest guess);
+    public GameStatusResponse getGameInfo(String gameId){
+        GameEntity game = gameRepository.findById(gameId)
+            .orElseThrow();
 
-    private List<Boolean> isLettersInWord(String word){
-        
-        isValidWord(word);
-        char[] typedCharArray = word.toCharArray();
-        List<Boolean> positions = new ArrayList<>(); 
-
-        for(int i=0; i < dailyWord.length(); ++i){
-            if(dailyWord.contains(String.valueOf(typedCharArray[i]))){
-                positions.add(true);
-            } else{
-                positions.add(false);
-            }
+        if(!game.getGameDate().equals(LocalDate.now())){
+            throw new GameExpiredException("Game expired");
         }
-        
-        return positions;
+
+        List<GuessHistory> guesses = game.getGuesses()
+            .stream()
+            .map(guess -> new GuessHistory(
+                guess.getAttemptNumber(),
+                guess.getGuess()
+            ))
+            .toList();
+
+        return new GameStatusResponse(
+            game.getId(),
+            game.getAttempts(),
+            guesses,
+            game.getWon()
+        );
     }
 
-    private List<Boolean> isLettersInRightPosition(String word){
+    public GuessResponse makeAGuess(String gameId, String guess){
 
-        isSameWord(word);
-        char[] typedCharArray = word.toCharArray();
-        char[] dailyCharArray = dailyWord.toCharArray();
-        List<Boolean> positions = new ArrayList<>(); 
+        GameEntity game = gameRepository.findById(gameId)
+            .orElseThrow();
 
-        for(int i=0; i < dailyWord.length(); ++i){
-            if(dailyCharArray[i] == (typedCharArray[i])){
-                positions.add(true);
-            } else{
-                positions.add(false);
-            }
+        if(game.getFinished()){
+            throw new GameIsAlreadyFinishedException("Game already finished");
         }
-        
-        return positions;
+
+        if(!isAValidWord(guess)){
+            throw new InvalidWordTypedException("Invalid word");
+        }
+
+        return processGuess(game, guess);
     }
+
+    private GuessResponse processGuess(GameEntity game, String guess){
+
+        int currentAttempt = game.getAttempts() + 1;
+
+        GuessEntity guessEntity = new GuessEntity();
+        guessEntity.setGame(game);
+        guessEntity.setGuess(guess);
+        guessEntity.setAttemptNumber(currentAttempt);
+        guessEntity.setCreatedAt(LocalDateTime.now());
+
+        guessRepository.save(guessEntity);
+
+        game.setAttempts(currentAttempt);
+ 
+        if(isTheWord(guess)){
+            game.setWon(true);
+            game.setFinished(true);
+        }else if(currentAttempt >= MAX_ATTEMPTS){
+            game.setWon(false);
+            game.setFinished(true);
+        }
+
+        gameRepository.save(game);
+
+        return new GuessResponse(
+            currentAttempt,
+            checkIfPositionsIsEqual(guess),
+            checkIfLetterExistInGuess(guess),
+            game.getFinished(),
+            game.getWon()
+        );
+    }
+
+    private Boolean isAValidWord(String guess){
+        return WORDS.contains(guess);
+    }
+
+    private Boolean isTheWord(String guess){
+        return dailyWord.equals(guess);
+    }
+
+    /**
+     * Verifies if the letters in the guess are in,
+     *  the same position as the daily word
+     * @param guess
+     * @return list of boolean indicating if the letters are in the same position as the daily word
+     */
+    private List<Boolean> checkIfPositionsIsEqual(String guess){
+        char[] guessLetters = guess.toCharArray();
+        char[] dailyWordChars = dailyWord.toCharArray();
+        
+        List<Boolean> existingLetters = new ArrayList<>();
     
-   private Boolean isSameWord(String word){
-       // Check if the word typed is the same as the daily word
-       isValidWord(word);
-       return word.equals(dailyWord);
+        for(int i=0; i < dailyWord.length(); ++i){
+            existingLetters.add(dailyWordChars[i] == guessLetters[i]);
+        }
+
+        return existingLetters;
     }
 
-    private Boolean isValidWord(String word){
-        // Check if its a real word
-        if(WORDS.contains(word)){
-            return true;
-        }
-        System.out.println("INVALID WORLD");
-        return false;
+    /**
+     * Checks which letters from the guess exist in the daily word,
+     * but are not in the same position.
+     *
+     * @param guess guessed word from the player
+     * @return list of letters that exist in the daily word in different positions
+     */
+    private List<Character> checkIfLetterExistInGuess(String guess){
+        char[] guessLetters = guess.toCharArray();
+        
+        List<Character> existingLetters = new ArrayList<>();
+    
+        for(char letter : guessLetters){
+            if(dailyWord.indexOf(letter) != -1){
+                existingLetters.add(letter);
+            }
+        }          
+
+        return existingLetters;
     }
 }
