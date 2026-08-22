@@ -4,8 +4,7 @@ import java.util.List;
 
 public record GuessResponse(
     Integer attemptNumber,
-    List<Boolean> correctPosition,
-    List<Character> existsInWord,
+    List<LetterResults> letters,
     Boolean gameFinished,
     Boolean won
 ){}

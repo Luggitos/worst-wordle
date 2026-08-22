@@ -10,6 +10,8 @@ import pedro.wordle.service.repository.dto.GameStatusResponse;
 import pedro.wordle.service.repository.dto.GuessHistory;
 import pedro.wordle.service.repository.dto.GameStartResponse;
 import pedro.wordle.service.repository.dto.GuessResponse;
+import pedro.wordle.service.repository.dto.LetterResults;
+import pedro.wordle.service.repository.dto.Status;
 import pedro.wordle.service.repository.entity.GameEntity;
 import pedro.wordle.service.repository.entity.GuessEntity;
 import pedro.wordle.service.repository.jpa.GameRepository;
@@ -22,7 +24,9 @@ import static pedro.wordle.utils.Words.WORDS;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class WordleService {
@@ -40,6 +44,10 @@ public class WordleService {
         this.guessRepository = guessRepository;
     };
 
+    /**
+     * Starts a new game and returns the game id
+     * @return {@link GameStartResponse} the id of new game
+     */
     public GameStartResponse startGame(){
 
         GameEntity game = new GameEntity();
@@ -56,6 +64,11 @@ public class WordleService {
         );
     }
 
+    /**
+     * Return status if player have staterd the game
+     * @param gameId string with the game id
+     * @return {@link GameStatusResponse} with the game status
+     */
     public GameStatusResponse getGameInfo(String gameId){
         GameEntity game = gameRepository.findById(gameId)
             .orElseThrow();
@@ -79,7 +92,13 @@ public class WordleService {
             game.getWon()
         );
     }
-
+    
+    /**
+     * Method to make a guess
+     * @param gameId String containing id of the game
+     * @param guess String with the guess of the player
+     * @return {@link GuessResponse} Status of the response
+     */
     public GuessResponse makeAGuess(String gameId, String guess){
 
         GameEntity game = gameRepository.findById(gameId)
@@ -122,8 +141,7 @@ public class WordleService {
 
         return new GuessResponse(
             currentAttempt,
-            checkIfPositionsIsEqual(guess),
-            checkIfLetterExistInGuess(guess),
+            checkLetterResults(guess),
             game.getFinished(),
             game.getWon()
         );
@@ -138,42 +156,63 @@ public class WordleService {
     }
 
     /**
-     * Verifies if the letters in the guess are in,
-     *  the same position as the daily word
-     * @param guess
-     * @return list of boolean indicating if the letters are in the same position as the daily word
+     * Function to verify the letters that correct in the game
+     * @param guess String containing the guess
+     * @return {@link List<LetterResults>} List containing the letters 
+     * and its correspondencies positions
      */
-    private List<Boolean> checkIfPositionsIsEqual(String guess){
-        char[] guessLetters = guess.toCharArray();
-        char[] dailyWordChars = dailyWord.toCharArray();
-        
-        List<Boolean> existingLetters = new ArrayList<>();
-    
-        for(int i=0; i < dailyWord.length(); ++i){
-            existingLetters.add(dailyWordChars[i] == guessLetters[i]);
+    private List<LetterResults> checkLetterResults(String guess){
+        char[] guessChar = guess.toCharArray();
+        char[] dailyChar = dailyWord.toCharArray();
+
+        List<LetterResults> results = new ArrayList<>();
+
+        Map<Character, Integer> letters = new HashMap<>();
+
+        for(char c : dailyChar){
+            letters.merge(c, 1, Integer::sum);
         }
 
-        return existingLetters;
-    }
+        for(int i=0; i < guessChar.length; i++){
+            if(guessChar[i] == dailyChar[i]){
+                results.add(new LetterResults(
+                        guessChar[i],
+                        Status.CORRECT
+                ));
 
-    /**
-     * Checks which letters from the guess exist in the daily word,
-     * but are not in the same position.
-     *
-     * @param guess guessed word from the player
-     * @return list of letters that exist in the daily word in different positions
-     */
-    private List<Character> checkIfLetterExistInGuess(String guess){
-        char[] guessLetters = guess.toCharArray();
-        
-        List<Character> existingLetters = new ArrayList<>();
-    
-        for(char letter : guessLetters){
-            if(dailyWord.indexOf(letter) != -1){
-                existingLetters.add(letter);
+                letters.put(
+                        guessChar[i],
+                        letters.get(guessChar[i]) -1
+                );
+            } else {
+                results.add(null);
             }
-        }          
+        }
 
-        return existingLetters;
+        for(int i=0; i < guessChar.length; ++i){
+
+            if(results.get(i) != null){
+                continue;
+            }
+
+            char letter = guessChar[i];
+
+            int available = letters.getOrDefault(letter, 0);
+
+            if(available > 0){
+                results.set(i, new LetterResults(
+                    letter,
+                    Status.PRESENT
+                ));
+
+                letters.put(letter, available - 1);
+            } else {
+                results.set(i, new LetterResults(
+                    letter,
+                    Status.ABSENT
+                ));
+            }
+        }
+        return results;
     }
 }
