@@ -14,5 +14,21 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wordle-backend
+    restart: unless-stopped
+    depends_on:
+      - postgres-db
+    ports:
+      - "8086:8086"
+    environment:
+      SERVER_PORT: 8086
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/Wordle
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: pass1234
+
 volumes:
   postgres_data:
