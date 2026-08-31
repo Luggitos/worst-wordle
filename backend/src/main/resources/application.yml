@@ -1,11 +1,11 @@
 server:
-    port: 8086
+    port: ${SERVER_PORT:8086}
 
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/Wordle
-    username: postgres
-    password: pass1234
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/Wordle}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:pass1234}
 
   jpa:
     hibernate:
