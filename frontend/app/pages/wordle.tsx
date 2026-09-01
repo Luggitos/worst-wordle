@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
 import Grid from "./grid";
 import { useWordleStore } from "../Stores/wordleStore";
 
+export default function WordlePage() {
+  const { storedGuess } = useWordleStore("13baf2d6-cff0-45fe-b03f-ceb29afccd5e");
 
-export function Wordle() {
-  const { storedGuess } = useWordleStore("01");
   return (
     <main className="flex flex-col min-h-screen pt-0 pb-4">
       <div className="flex-1 flex flex-col items-center min-h-0">
