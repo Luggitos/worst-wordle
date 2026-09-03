@@ -32,8 +32,6 @@ import java.util.Map;
 @Service
 public class WordleService {
 
-    private final String dailyWord = getRandomWord();
-
     @Autowired
     private GameRepository gameRepository;
     
@@ -50,6 +48,8 @@ public class WordleService {
      * @return {@link GameStartResponse} the id of new game
      */
     public GameStartResponse startGame(){
+
+        String dailyWord = getRandomWord();
 
         GameEntity game = new GameEntity();
 
@@ -81,9 +81,18 @@ public class WordleService {
 
         List<GuessHistory> guesses = game.getGuesses()
             .stream()
+            //pega cada guess e verifica as posições
             .map(guess -> new GuessHistory(
                 guess.getAttemptNumber(),
-                guess.getGuess()
+                guess.getGuess(),
+                checkLetterResults(
+                    guess.getGuess(),
+                    game.getDailyword()
+                )
+                // Faz filtro para apenas pegar o status
+                .stream()
+                .map(LetterResults::status) // letterResult -> letterResult.status())
+                .toList()
             ))
             .toList();
 
@@ -123,7 +132,7 @@ public class WordleService {
         int currentAttempt = game.getAttempts() + 1;
 
         GuessEntity guessEntity = new GuessEntity();
-        List<LetterResults> positions = checkLetterResults(guess);
+        List<LetterResults> positions = checkLetterResults(guess, game.getDailyword());
 
         guessEntity.setGame(game);
         guessEntity.setGuess(guess);
@@ -134,7 +143,7 @@ public class WordleService {
 
         game.setAttempts(currentAttempt);
  
-        if(isTheWord(guess)){
+        if(isTheWord(guess, game.getDailyword())){
             game.setWon(true);
             game.setFinished(true);
         }else if(currentAttempt >= MAX_ATTEMPTS){
@@ -156,7 +165,7 @@ public class WordleService {
         return WORDS.contains(guess);
     }
 
-    private Boolean isTheWord(String guess){
+    private Boolean isTheWord(String guess, String dailyWord){
         return dailyWord.equals(guess);
     }
 
@@ -166,7 +175,7 @@ public class WordleService {
      * @return {@link List<LetterResults>} List containing the letters 
      * and its correspondencies positions
      */
-    private List<LetterResults> checkLetterResults(String guess){
+    private List<LetterResults> checkLetterResults(String guess, String dailyWord){
         char[] guessChar = guess.toCharArray();
         char[] dailyChar = dailyWord.toCharArray();
 
