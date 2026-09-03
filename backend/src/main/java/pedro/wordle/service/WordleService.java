@@ -3,6 +3,7 @@ package pedro.wordle.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ch.qos.logback.core.recovery.ResilientOutputStreamBase;
 import pedro.wordle.exceptions.GameExpiredException;
 import pedro.wordle.exceptions.GameIsAlreadyFinishedException;
 import pedro.wordle.exceptions.InvalidWordTypedException;
@@ -54,6 +55,7 @@ public class WordleService {
 
         game.setAttempts(0);
         game.setFinished(false);
+        game.setWon(false);
         game.setGameDate(LocalDate.now());
         game.setDailyword(dailyWord);
 
@@ -89,6 +91,7 @@ public class WordleService {
             game.getId(),
             game.getAttempts(),
             guesses,
+            game.getFinished(),
             game.getWon()
         );
     }
@@ -120,6 +123,8 @@ public class WordleService {
         int currentAttempt = game.getAttempts() + 1;
 
         GuessEntity guessEntity = new GuessEntity();
+        List<LetterResults> positions = checkLetterResults(guess);
+
         guessEntity.setGame(game);
         guessEntity.setGuess(guess);
         guessEntity.setAttemptNumber(currentAttempt);
@@ -141,7 +146,7 @@ public class WordleService {
 
         return new GuessResponse(
             currentAttempt,
-            checkLetterResults(guess),
+            positions,
             game.getFinished(),
             game.getWon()
         );

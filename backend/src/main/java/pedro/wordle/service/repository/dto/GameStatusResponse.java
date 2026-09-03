@@ -6,5 +6,6 @@ public record GameStatusResponse(
     String gameId,
     Integer attempts,
     List<GuessHistory> guesses,
+    Boolean gameFinished,
     Boolean won
 ){}
