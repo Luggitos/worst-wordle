@@ -1,0 +1,3 @@
+interface GameStartResponse {
+    id: string;
+}

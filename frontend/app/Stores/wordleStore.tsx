@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { submitGuess } from "~/api/wordleApi";
+import { submitGuess } from "~/api/makeGuess";
 
 export function useWordleStore(gameId: string) {
   const [storedGuess, setStoredGuess] = useState<WordleState>({
