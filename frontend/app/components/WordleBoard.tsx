@@ -2,13 +2,11 @@ import Grid from "../pages/grid";
 
 type WordleBoardProps = {
   guesses: string[];
-  currentGuess: number;
   letters: LetterResult[][];
 };
 
 export default function WordleBoard({
   guesses,
-  currentGuess,
   letters,
 }: WordleBoardProps) {
   return (

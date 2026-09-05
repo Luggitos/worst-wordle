@@ -7,7 +7,7 @@ import {
   type WordleState,
 } from "./wordleState";
 
-export function useWordleStore(gameId: string) {
+export function useWordleStore(gameId: string | null) {
   const [storedGuess, setStoredGuess] = useState<WordleState>(
     createInitialWordleState,
   );
@@ -18,6 +18,7 @@ export function useWordleStore(gameId: string) {
 
     if (
       currentGuess.length !== 5 ||
+      !gameId ||
       storedGuess.gameFinished ||
       isSubmitting.current
     ) {
@@ -66,6 +67,10 @@ export function useWordleStore(gameId: string) {
   };
 
   useEffect(() => {
+    if (!gameId) {
+      return;
+    }
+
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {

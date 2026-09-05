@@ -2,7 +2,7 @@ import { URL } from "../utils/constant";
 
 export async function startGame(): Promise<GameStartResponse> {
     const response = await fetch(URL, {
-        method: "GET",
+        method: "POST",
         headers: {
             "Content-Type": "application/json",
         }
