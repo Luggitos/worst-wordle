@@ -1,13 +1,13 @@
-FROM maven:3.9.9-eclipse-temurin-25 AS build
+FROM eclipse-temurin:25-jdk AS build
 WORKDIR /workspace
 
-COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
-RUN chmod +x mvnw
-RUN ./mvnw -q dependency:go-offline
+RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
+
+COPY pom.xml ./
+RUN mvn -q dependency:go-offline
 
 COPY src ./src
-RUN ./mvnw -q clean package -DskipTests
+RUN mvn -q clean package -DskipTests
 
 FROM eclipse-temurin:25-jre
 WORKDIR /app

@@ -5,9 +5,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import pedro.wordle.service.WordleService;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +19,7 @@ import pedro.wordle.service.repository.dto.GuessResponse;
 
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/wordle")
 public class WordleController {
     
